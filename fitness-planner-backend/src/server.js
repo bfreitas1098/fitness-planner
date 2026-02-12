@@ -1,4 +1,6 @@
 const express = require("express");
+const prisma = require("./db/prisma");
+console.log("Prisma client ready:", typeof prisma);
 
 const app = express();
 const PORT = 3001;
