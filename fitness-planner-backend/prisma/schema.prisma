@@ -13,8 +13,27 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Fitness Planner Tables
+
 model Exercise {
   id        Int       @id @default(autoincrement())
   name      String    @unique
   createdAt DateTime  @default(now())
+  workoutExercises WorkoutExercise[]
+}
+
+model Workout {
+  id        Int       @id @default(autoincrement())
+  name      String    
+  date      DateTime
+  createdAt DateTime  @default(now())
+  workoutExercises WorkoutExercise[]
+}
+
+model WorkoutExercise {
+  id        Int       @id @default(autoincrement())
+  workoutId Int
+  exerciseId Int
+  workout   Workout   @relation(fields: [workoutId], references: [id])
+  exercise  Exercise  @relation(fields: [exerciseId], references: [id])
 }

@@ -1,6 +1,7 @@
-POST http://localhost:3001/exercises
+POST http://localhost:3001/workouts
 Content-Type: application/json
 
 {
-    "name": "Hip Thrust"
+    "name": "Lower Body A",
+    "date": "2026-03-12"
 }

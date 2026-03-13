@@ -28,7 +28,7 @@ app.post("/exercises", async (req, res) => {
   try {
     const { name } = req.body;
 
-    // basic validation
+    // validation
     if (!name || typeof name !== "string") {
       return res.status(400).json({ error: "name is required" });
     }
@@ -40,8 +40,32 @@ app.post("/exercises", async (req, res) => {
     res.status(201).json(exercise);
   } catch (err) {
     console.error("POST /exercises error:", err);
+    res.status(500).json({ error: "Something went wrong" });
+  }
+});
 
-    // Prevent error from duplicate names
+app.post("/workouts", async (req, res) => {
+  try {
+    const { name, date } = req.body;
+
+    if (!name || typeof name !== "string") {
+      return res.status(400).json({ error: "name is required" });
+    }
+
+    if (!date) {
+      return res.status(400).json({ error: "date is required" });
+    }
+
+    const workout = await prisma.workout.create({
+      data: {
+        name: name.trim(),
+        date: new Date(date),
+      },
+    });
+
+    res.status(201).join(workout);
+  } catch (err) {
+    console.error("POST /exercises error:", err);
     res.status(500).json({ error: "Something went wrong" });
   }
 });
