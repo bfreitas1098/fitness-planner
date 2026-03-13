@@ -20,7 +20,7 @@ app.get("/exercises", async (req, res) => {
     res.json(exercises);
   } catch (err) {
     console.error("GET /exercises error:", err);
-    res.status(500).json({ error: "Something went wrong" });
+    res.status(500).json({ error: "Could not get exercises" });
   }
 });
 
@@ -28,7 +28,6 @@ app.post("/exercises", async (req, res) => {
   try {
     const { name } = req.body;
 
-    // validation
     if (!name || typeof name !== "string") {
       return res.status(400).json({ error: "name is required" });
     }
@@ -40,7 +39,7 @@ app.post("/exercises", async (req, res) => {
     res.status(201).json(exercise);
   } catch (err) {
     console.error("POST /exercises error:", err);
-    res.status(500).json({ error: "Something went wrong" });
+    res.status(500).json({ error: "Could not post exercises" });
   }
 });
 
@@ -63,10 +62,25 @@ app.post("/workouts", async (req, res) => {
       },
     });
 
-    res.status(201).join(workout);
+    res.status(201).json(workout);
   } catch (err) {
     console.error("POST /exercises error:", err);
-    res.status(500).json({ error: "Something went wrong" });
+    res.status(500).json({ error: "Could not post workouts" });
+  }
+});
+
+app.get("/workouts", async (req, res) => {
+  try {
+    const workouts = await prisma.workout.findMany({
+      orderBy: {
+        date: "desc",
+      },
+    });
+
+    res.json(workouts);
+  } catch (err) {
+    console.error("GET /exercises error:", err);
+    res.status(500).json({ error: "Could not get workouts" });
   }
 });
 
