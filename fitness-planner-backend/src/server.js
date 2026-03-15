@@ -5,10 +5,8 @@ console.log("Prisma client ready:", typeof prisma);
 const app = express();
 const PORT = 3001;
 
-// Middleware: allows server to read JSON
 app.use(express.json());
 
-// Test route: confirms backend is working
 app.get("/health", (req, res) => {
   res.json({ ok: true });
 });
@@ -109,6 +107,37 @@ app.post("/workouts/:workoutId/exercises", async (req, res) => {
     res.status(500).json({ error: "Could not post workout" });
   }
 });
+
+app.get("/workouts/:id", async (req, res) => {
+  try {
+    const workoutId = Number(req.params.id);
+
+    if (!workoutId || Number.isNaN(workoutId)) {
+      return res.status(400).json({ error: "valid workoutId is required" });
+    }
+
+    const workout = await prisma.workout.findUnique({
+      where: { id: workoutId },
+      include: {
+        workoutExercises: {
+          include: {
+            exercise: true,
+          },
+        },
+      },
+    });
+
+    if (!workout) {
+      return res.status(400).json({ error: "Workout not found" });
+    }
+
+    res.json(workout);
+  } catch (err) {
+    console.error("/GET /workouts/:workoutId/exercises error:", err);
+    res.status(500).json({ error: "Could not get workout" });
+  }
+});
+
 // Start the server
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);

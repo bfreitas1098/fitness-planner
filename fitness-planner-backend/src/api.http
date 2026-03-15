@@ -1,6 +1,1 @@
-POST http://localhost:3001/workouts/1/exercises
-Content-Type: application/json
-
-{
-    "exerciseId": 1
-}
+GET http://localhost:3001/workouts/1
