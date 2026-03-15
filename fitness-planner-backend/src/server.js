@@ -138,6 +138,45 @@ app.get("/workouts/:id", async (req, res) => {
   }
 });
 
+app.post("/workout-exercises/:id/sets", async (req, res) => {
+  try {
+    const workoutExerciseId = Number(req.params.id);
+    const { setNumber, reps, weight } = req.body;
+
+    if (!workoutExerciseId || Number.isNaN(workoutExerciseId)) {
+      return res
+        .status(400)
+        .json({ error: "valid workoutExercieId is required" });
+    }
+
+    if (!setNumber || typeof setNumber !== "number") {
+      return res.status(400).json({ error: "valid number of sets required" });
+    }
+
+    if (!reps || typeof reps !== "number") {
+      return res.status(400).json({ error: "valid number of reps required" });
+    }
+
+    if (weight === undefined || typeof weight !== "number") {
+      return res.status(400).json({ error: "weight must be a number" });
+    }
+
+    const newSet = await prisma.set.create({
+      data: {
+        workoutExerciseId,
+        setNumber,
+        reps,
+        weight,
+      },
+    });
+
+    res.status(201).json(newSet);
+  } catch (err) {
+    console.error("/POST workout-exercises/:id/sets error:", err);
+    res.status(500).json({ error: "Could not post sets" });
+  }
+});
+
 // Start the server
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);

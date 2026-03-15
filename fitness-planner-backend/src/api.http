@@ -1,1 +1,8 @@
-GET http://localhost:3001/workouts/1
+POST http://localhost:3001/workout-exercises/1/sets
+Content-Type: application/json
+
+{
+  "setNumber": 1,
+  "reps": 10,
+  "weight": 185
+}
