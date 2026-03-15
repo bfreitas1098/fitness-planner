@@ -122,6 +122,11 @@ app.get("/workouts/:id", async (req, res) => {
         workoutExercises: {
           include: {
             exercise: true,
+            sets: {
+              orderBy: {
+                setNumber: "asc",
+              },
+            },
           },
         },
       },
@@ -141,16 +146,12 @@ app.get("/workouts/:id", async (req, res) => {
 app.post("/workout-exercises/:id/sets", async (req, res) => {
   try {
     const workoutExerciseId = Number(req.params.id);
-    const { setNumber, reps, weight } = req.body;
+    const { reps, weight } = req.body;
 
     if (!workoutExerciseId || Number.isNaN(workoutExerciseId)) {
       return res
         .status(400)
         .json({ error: "valid workoutExercieId is required" });
-    }
-
-    if (!setNumber || typeof setNumber !== "number") {
-      return res.status(400).json({ error: "valid number of sets required" });
     }
 
     if (!reps || typeof reps !== "number") {
@@ -161,10 +162,17 @@ app.post("/workout-exercises/:id/sets", async (req, res) => {
       return res.status(400).json({ error: "weight must be a number" });
     }
 
+    const lastSet = await prisma.set.findFirst({
+      where: { workoutExerciseId },
+      orderBy: { setNumber: "desc" },
+    });
+
+    const nextSetNumber = lastSet ? lastSet.setNumber + 1 : 1;
+
     const newSet = await prisma.set.create({
       data: {
         workoutExerciseId,
-        setNumber,
+        setNumber: nextSetNumber,
         reps,
         weight,
       },
