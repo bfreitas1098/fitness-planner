@@ -185,6 +185,32 @@ app.post("/workout-exercises/:id/sets", async (req, res) => {
   }
 });
 
+app.post("/workouts/full", async (req, res) => {
+  try {
+    const { name, date, exercises } = req.body;
+
+    if (!name || typeof name !== "string") {
+      return res.status(400).json({ error: "valid name is required" });
+    }
+
+    const parsedDate = new Date(date);
+    if (!date || Number.isNaN(parsedDate.getTime())) {
+      return res.status(400).json({ error: "valid date is required" });
+    }
+
+    if (!exercises || !Array.isArray(exercises) || exercises.length === 0) {
+      return res
+        .status(400)
+        .json({ error: "at least one exercise is required" });
+    }
+
+    res.json({ message: "Validation passed" });
+  } catch (err) {
+    console.error("/POST workouts/full error: ", err);
+    res.status(500).json({ error: "Could not post full workout" });
+  }
+});
+
 // Start the server
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
