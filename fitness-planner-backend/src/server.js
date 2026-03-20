@@ -189,6 +189,7 @@ app.post("/workouts/full", async (req, res) => {
   try {
     const { name, date, exercises } = req.body;
 
+    // Validation
     if (!name || typeof name !== "string") {
       return res.status(400).json({ error: "valid name is required" });
     }
@@ -204,7 +205,53 @@ app.post("/workouts/full", async (req, res) => {
         .json({ error: "at least one exercise is required" });
     }
 
-    res.json({ message: "Validation passed" });
+    // Create workout
+    const workout = await prisma.workout.create({
+      data: {
+        name: name.trim(),
+        date: parsedDate,
+      },
+    });
+
+    // Create workout exercise rows
+    const workoutExercises = [];
+
+    for (const exercise of exercises) {
+      const exerciseId = exercise.exerciseId;
+      const sets = exercise.sets;
+
+      if (!exerciseId || typeof exerciseId !== "number") {
+        return res.status(400).json({ error: "valid exerciseId is required" });
+      }
+
+      if (!Array.isArray(sets) || sets.length === 0) {
+        return res.status(400).json({ error: "at least one set is required" });
+      }
+
+      const existingExercise = await prisma.exercise.findUnique({
+        where: { id: exerciseId },
+      });
+
+      if (!existingExercise) {
+        return res
+          .status(400)
+          .json({ error: `exerciseId ${exerciseId} does not exist` });
+      }
+
+      const workoutExercise = await prisma.workoutExercise.create({
+        data: {
+          workoutId: workout.id,
+          exerciseId: exerciseId,
+        },
+      });
+
+      workoutExercises.push(workoutExercise);
+    }
+
+    res.status(201).json({
+      workout,
+      workoutExercises,
+    });
   } catch (err) {
     console.error("/POST workouts/full error: ", err);
     res.status(500).json({ error: "Could not post full workout" });
