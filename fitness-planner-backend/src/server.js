@@ -246,6 +246,30 @@ app.post("/workouts/full", async (req, res) => {
       });
 
       workoutExercises.push(workoutExercise);
+
+      for (let i = 0; i < sets.length; i++) {
+        const set = sets[i];
+        const reps = set.reps;
+        const weight = set.weight;
+
+        if (!reps || typeof reps !== "number") {
+          return res.status(400).json({ error: "reps are required for sets" });
+        }
+        if (weight !== undefined && typeof weight !== "number") {
+          return res
+            .status(400)
+            .json({ error: "weight must be a number if provided" });
+        }
+
+        await prisma.set.create({
+          data: {
+            workoutExerciseId: workoutExercise.id,
+            setNumber: i + 1,
+            reps: reps,
+            weight: weight,
+          },
+        });
+      }
     }
 
     res.status(201).json({
