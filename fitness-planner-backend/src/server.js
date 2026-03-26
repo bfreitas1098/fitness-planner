@@ -282,6 +282,59 @@ app.post("/workouts/full", async (req, res) => {
   }
 });
 
+app.delete("/workouts/:id", async (req, res) => {
+  try {
+    const workoutId = Number(req.params.id);
+
+    // validating workoutId
+    if (!workoutId || Number.isNaN(workoutId)) {
+      return res.status(400).json({ error: "valid workoutId is required" });
+    }
+
+    const workout = await prisma.workout.findUnique({
+      where: { id: workoutId },
+    });
+
+    // validating workout
+    if (!workout) {
+      return res.status(404).json({ error: "workout not found" });
+    }
+
+    const workoutExercises = await prisma.workoutExercise.findMany({
+      where: { workoutId: workoutId },
+    });
+
+    // create an array with all workoutExerciseIds
+    const workoutExerciseIds = workoutExercises.map(
+      (workoutExercise) => workoutExercise.id,
+    );
+
+    // delete sets
+    await prisma.set.deleteMany({
+      where: {
+        workoutExerciseId: {
+          in: workoutExerciseIds,
+        },
+      },
+    });
+
+    // delete all workoutExercise rows for this workout
+    await prisma.workoutExercise.deleteMany({
+      where: { id: workoutId },
+    });
+
+    // delete the workout itself
+    await prisma.workout.delete({
+      where: { id: workoutId },
+    });
+
+    return res.status(200).json({ message: "workout deleted" });
+  } catch (err) {
+    console.error("DELETE /workouts/:id error", err);
+    res.status(500).json({ error: "could not delete workout" });
+  }
+});
+
 // Start the server
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
