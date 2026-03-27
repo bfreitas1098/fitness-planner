@@ -1,3 +1,4 @@
+import ExerciseList from "../components/layout/ExerciseList";
 import { Card } from "../components/layout/ui";
 
 export default function Dashboard() {
@@ -25,6 +26,7 @@ export default function Dashboard() {
         </div>
         <div style={styles.chartPlaceholder} />
       </Card>
+      <ExerciseList />
     </div>
   );
 }

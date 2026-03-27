@@ -1,4 +1,4 @@
-POST http://localhost:3001/workouts/full
+GET http://localhost:3001/exercises
 Content-Type: application/json
 
 {
