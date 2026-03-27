@@ -273,10 +273,28 @@ app.post("/workouts/full", async (req, res) => {
       }
     }
 
-    res.status(201).json({
-      workout,
-      workoutExercises,
+    // return full workout
+    const fullWorkout = await prisma.workout.findUnique({
+      where: { id: workout.id },
+      include: {
+        workoutExercises: {
+          include: {
+            exercise: true,
+            sets: {
+              orderBy: {
+                setNumber: "asc",
+              },
+            },
+          },
+        },
+      },
     });
+
+    if (!fullWorkout) {
+      return res.status(500).json({ error: "could not load created workout" });
+    }
+
+    res.status(201).json(fullWorkout);
   } catch (err) {
     console.error("/POST workouts/full error: ", err);
     res.status(500).json({ error: "Could not post full workout" });

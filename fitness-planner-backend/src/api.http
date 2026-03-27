@@ -1,2 +1,16 @@
-GET http://localhost:3001/workouts/2
+POST http://localhost:3001/workouts/full
 Content-Type: application/json
+
+{
+    "name": "Lower Body B",
+    "date": "2026-03-14",
+    "exercises": [
+        {
+            "exerciseId": 2,
+            "sets": [
+                { "reps": 10, "weight": 185 }
+            ]
+        }
+    ]
+
+}
