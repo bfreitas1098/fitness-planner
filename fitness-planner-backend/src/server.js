@@ -1,15 +1,16 @@
 const express = require("express");
 const prisma = require("./db/prisma");
-console.log("Prisma client ready:", typeof prisma);
+const cors = require("cors");
 
 const app = express();
 const PORT = 3001;
 
 app.use(express.json());
-
-app.get("/health", (req, res) => {
-  res.json({ ok: true });
-});
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+  }),
+);
 
 // Routes
 app.get("/exercises", async (req, res) => {
