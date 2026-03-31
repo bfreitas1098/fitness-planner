@@ -71,6 +71,21 @@ export default function PlanBuilder() {
     setWorkoutExercises(updatedWorkoutExercises);
   }
 
+  function addSet(exerciseId) {
+    const updatedWorkoutExercises = workoutExercises.map((workoutExercise) => {
+      if (workoutExercise.exerciseId !== exerciseId) {
+        return workoutExercise;
+      }
+
+      return {
+        ...workoutExercise,
+        sets: [...workoutExercise.sets, { reps: "", weight: "" }],
+      };
+    });
+
+    setWorkoutExercises(updatedWorkoutExercises);
+  }
+
   return (
     <div style={{ maxWidth: 1100, display: "grid", gap: 14 }}>
       <Card
@@ -196,6 +211,14 @@ export default function PlanBuilder() {
                         />
                       </div>
                     ))}
+
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => addSet(workoutExercise.exerciseId)}
+                    >
+                      + Add Set
+                    </Button>
                   </div>
                 ))}
               </div>
