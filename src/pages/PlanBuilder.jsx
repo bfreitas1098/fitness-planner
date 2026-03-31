@@ -51,6 +51,26 @@ export default function PlanBuilder() {
     }
   }
 
+  function handleSetChange(exerciseId, setIndex, field, value) {
+    const updatedWorkoutExercises = workoutExercises.map((workoutExercise) => {
+      if (workoutExercise.exerciseId !== exerciseId) {
+        return workoutExercise;
+      }
+
+      const updatedSets = workoutExercise.sets.map((set, index) => {
+        if (index !== setIndex) {
+          return set;
+        }
+
+        return { ...set, [field]: value };
+      });
+
+      return { ...workoutExercise, sets: updatedSets };
+    });
+
+    setWorkoutExercises(updatedWorkoutExercises);
+  }
+
   return (
     <div style={{ maxWidth: 1100, display: "grid", gap: 14 }}>
       <Card
@@ -135,16 +155,50 @@ export default function PlanBuilder() {
             {workoutExercises.length === 0 ? (
               <p>No exercises selected yet.</p>
             ) : (
-              <ul style={styles.selectedList}>
+              <div style={styles.selectedExercisesContainer}>
                 {workoutExercises.map((workoutExercise) => (
-                  <li key={workoutExercise.exerciseId}>
+                  <div
+                    key={workoutExercise.exerciseId}
+                    style={styles.selectedExerciseCard}
+                  >
                     <strong>{workoutExercise.name}</strong>
-                    <div style={styles.muted}>
-                      Sets: {workoutExercise.sets.length}
-                    </div>
-                  </li>
+
+                    {workoutExercise.sets.map((set, index) => (
+                      <div key={index} style={styles.setRow}>
+                        <input
+                          type="number"
+                          placeholder="Reps"
+                          value={set.reps}
+                          onChange={(e) => {
+                            handleSetChange(
+                              workoutExercise.exerciseId,
+                              index,
+                              "reps",
+                              e.target.value,
+                            );
+                          }}
+                          style={styles.smallInput}
+                        />
+
+                        <input
+                          type="number"
+                          placeholder="weight"
+                          value={set.weight}
+                          onChange={(e) =>
+                            handleSetChange(
+                              workoutExercise.exerciseId,
+                              index,
+                              "weight",
+                              e.target.value,
+                            )
+                          }
+                          style={styles.smallInput}
+                        />
+                      </div>
+                    ))}
+                  </div>
                 ))}
-              </ul>
+              </div>
             )}
           </div>
         </div>
@@ -227,5 +281,33 @@ const styles = {
     paddingLeft: 18,
     display: "grid",
     gap: 8,
+  },
+
+  selectedExercisesContainer: {
+    display: "grid",
+    gap: 12,
+  },
+
+  selectedExerciseCard: {
+    border: "1px solid var(--border)",
+    borderRadius: 12,
+    padding: 12,
+    background: "#fff",
+    display: "grid",
+    gap: 10,
+  },
+
+  setRow: {
+    display: "flex",
+    gap: 8,
+  },
+
+  smallInput: {
+    width: 120,
+    padding: 8,
+    borderRadius: 10,
+    border: "1px solid var(--border)",
+    background: "#fff",
+    outline: "none",
   },
 };
