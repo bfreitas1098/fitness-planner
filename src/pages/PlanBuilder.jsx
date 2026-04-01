@@ -1,5 +1,6 @@
 import { Button, Card } from "../components/layout/ui";
 import { useState, useEffect } from "react";
+import WorkoutModal from "../components/layout/WorkoutModal";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -8,6 +9,7 @@ export default function PlanBuilder() {
   const [exercises, setExercises] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isWorkoutModalOpen, setIsWorkoutModalOpen] = useState(false);
 
   useEffect(() => {
     async function fetchExercises() {
@@ -90,7 +92,11 @@ export default function PlanBuilder() {
     <div style={{ maxWidth: 1100, display: "grid", gap: 14 }}>
       <Card
         title="Week Plan"
-        action={<Button variant="ghost">+ Add Workout</Button>}
+        action={
+          <Button variant="ghost" onClick={() => setIsWorkoutModalOpen(true)}>
+            + Add Workout
+          </Button>
+        }
       >
         <div style={styles.week}>
           {DAYS.map((day) => (
@@ -226,6 +232,11 @@ export default function PlanBuilder() {
           </div>
         </div>
       </Card>
+
+      <WorkoutModal
+        isOpen={isWorkoutModalOpen}
+        onClose={() => setIsWorkoutModalOpen(false)}
+      />
     </div>
   );
 }
