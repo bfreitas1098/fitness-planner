@@ -1,4 +1,4 @@
-GET http://localhost:3001/exercises
+GET http://localhost:3001/workouts/13
 Content-Type: application/json
 
 {

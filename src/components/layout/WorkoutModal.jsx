@@ -87,6 +87,58 @@ export default function WorkoutModal({ isOpen, onClose }) {
     setWorkoutExercises(updatedWorkoutExercises);
   }
 
+  async function handleSaveWorkout() {
+    if (!workoutName || !workoutDate) {
+      alert("Workout name and date are required");
+      return;
+    }
+
+    if (!workoutExercises.length === 0) {
+      alert("Please add at least one exercise");
+      return;
+    }
+
+    const payload = {
+      name: workoutName,
+      date: workoutDate,
+      exercises: workoutExercises.map((exercise) => ({
+        exerciseId: exercise.exerciseId,
+        sets: exercise.sets.map((set) => ({
+          reps: Number(set.reps),
+          weight: set.weight === "" ? undefined : Number(set.weight),
+        })),
+      })),
+    };
+
+    try {
+      const response = await fetch("http://localhost:3001/workouts/full", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save workout");
+      }
+
+      const data = await response.json();
+      console.log("Workout saved:", data);
+
+      // Reset form
+      setWorkoutName("");
+      setWorkoutDate("");
+      setNotes("");
+      setWorkoutExercises([]);
+
+      onClose();
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong saving the workout");
+    }
+  }
+
   if (!isOpen) return null;
 
   return (
@@ -222,7 +274,9 @@ export default function WorkoutModal({ isOpen, onClose }) {
         </div>
 
         <div style={styles.actions}>
-          <button style={styles.primaryButton}>Save Workout</button>
+          <button style={styles.primaryButton} onClick={handleSaveWorkout}>
+            Save Workout
+          </button>
           <button onClick={onClose} style={styles.secondaryButton}>
             Close
           </button>
