@@ -7,11 +7,19 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum ExerciseCategory {
+  UPPER_BODY
+  LOWER_BODY
+  CORE
+}
+
 // Fitness Planner Tables
 
 model Exercise {
   id                Int           @id @default(autoincrement())
   name              String        @unique
+  category          ExerciseCategory?
+  isCustom          Boolean       @default(false)
   createdAt         DateTime      @default(now())
   workoutExercises  WorkoutExercise[]
 }
