@@ -1,6 +1,12 @@
 import { useState, useEffect } from "react";
 import { Button } from "./ui";
 
+const exerciseCategories = [
+  { category: "UPPER_BODY", label: "Upper Body" },
+  { category: "LOWER_BODY", label: "Lower Body" },
+  { category: "CORE", label: "Core" },
+];
+
 export default function WorkoutModal({ isOpen, onClose }) {
   const [workoutExercises, setWorkoutExercises] = useState([]);
   const [exercises, setExercises] = useState([]);
@@ -9,6 +15,17 @@ export default function WorkoutModal({ isOpen, onClose }) {
   const [workoutName, setWorkoutName] = useState("");
   const [workoutDate, setWorkoutDate] = useState("");
   const [notes, setNotes] = useState("");
+
+  const exerciseGroups = [
+    ...exerciseCategories.map(({ category, label }) => ({
+      label,
+      exercises: exercises.filter((exercise) => exercise.category === category),
+    })),
+    {
+      label: "Other",
+      exercises: exercises.filter((exercise) => !exercise.category),
+    },
+  ].filter((group) => group.exercises.length > 0);
 
   useEffect(() => {
     async function fetchExercises() {
@@ -80,7 +97,13 @@ export default function WorkoutModal({ isOpen, onClose }) {
 
       return {
         ...workoutExercise,
-        sets: [...workoutExercise.sets, { reps: "", weight: "" }],
+        sets: [
+          ...workoutExercise.sets,
+          {
+            reps: workoutExercise.sets[0].reps,
+            weight: workoutExercise.sets[0].weight,
+          },
+        ],
       };
     });
 
@@ -188,27 +211,41 @@ export default function WorkoutModal({ isOpen, onClose }) {
           ) : exercises.length === 0 ? (
             <p>No exercises found.</p>
           ) : (
-            <div style={styles.exerciseList}>
-              {exercises.map((exercise) => {
-                const isSelected = workoutExercises.some(
-                  (workoutExercise) =>
-                    workoutExercise.exerciseId === exercise.id,
-                );
+            <div style={styles.exerciseGroups}>
+              {exerciseGroups.map((group) => (
+                <section key={group.label} style={styles.exerciseGroup}>
+                  <h3 style={styles.exerciseGroupTitle}>{group.label}</h3>
+                  <div style={styles.exerciseList}>
+                    {group.exercises.map((exercise) => {
+                      const isSelected = workoutExercises.some(
+                        (workoutExercise) =>
+                          workoutExercise.exerciseId === exercise.id,
+                      );
+                      const exerciseOrder = workoutExercises.findIndex(
+                        (workoutExercise) =>
+                          workoutExercise.exerciseId === exercise.id,
+                      );
 
-                return (
-                  <button
-                    key={exercise.id}
-                    type="button"
-                    onClick={() => toggleExercise(exercise)}
-                    style={{
-                      ...styles.exerciseButton,
-                      ...(isSelected ? styles.exerciseButtonSelected : {}),
-                    }}
-                  >
-                    {exercise.name} {isSelected ? "✅" : ""}
-                  </button>
-                );
-              })}
+                      return (
+                        <button
+                          key={exercise.id}
+                          type="button"
+                          onClick={() => toggleExercise(exercise)}
+                          style={{
+                            ...styles.exerciseButton,
+                            ...(isSelected
+                              ? styles.exerciseButtonSelected
+                              : {}),
+                          }}
+                        >
+                          {isSelected ? `${exerciseOrder + 1}. ` : ""}
+                          {exercise.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </section>
+              ))}
             </div>
           )}
         </div>
@@ -231,13 +268,15 @@ export default function WorkoutModal({ isOpen, onClose }) {
                       <input
                         type="number"
                         placeholder="Reps"
+                        min="0"
                         value={set.reps}
                         onChange={(e) => {
+                          const value = e.target.value;
                           handleSetChange(
                             workoutExercise.exerciseId,
                             index,
                             "reps",
-                            e.target.value,
+                            value !== "" && Number(value) < 0 ? "0" : value,
                           );
                         }}
                         style={styles.smallInput}
@@ -245,16 +284,18 @@ export default function WorkoutModal({ isOpen, onClose }) {
 
                       <input
                         type="number"
-                        placeholder="weight"
+                        placeholder="weight (lb)"
+                        min="0"
                         value={set.weight}
-                        onChange={(e) =>
+                        onChange={(e) => {
+                          const value = e.target.value;
                           handleSetChange(
                             workoutExercise.exerciseId,
                             index,
                             "weight",
-                            e.target.value,
-                          )
-                        }
+                            value !== "" && Number(value) < 0 ? "0" : value,
+                          );
+                        }}
                         style={styles.smallInput}
                       />
                     </div>
@@ -303,7 +344,10 @@ const styles = {
     backgroundColor: "#fff",
     padding: 24,
     borderRadius: 12,
-    minWidth: 400,
+    width: "75vw",
+    minWidth: 0,
+    maxHeight: "90vh",
+    overflowY: "auto",
     display: "grid",
     gap: 14,
   },
@@ -354,6 +398,22 @@ const styles = {
     display: "flex",
     flexWrap: "wrap",
     gap: 8,
+  },
+
+  exerciseGroups: {
+    display: "grid",
+    gap: 14,
+  },
+
+  exerciseGroup: {
+    display: "grid",
+    gap: 8,
+  },
+
+  exerciseGroupTitle: {
+    margin: 0,
+    fontSize: 15,
+    fontWeight: 700,
   },
 
   exerciseButton: {

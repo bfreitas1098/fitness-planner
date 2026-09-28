@@ -23,38 +23,11 @@ export default function PlanBuilder() {
               <div style={styles.dayLabel}>{day}</div>
 
               <div style={styles.workoutCard}>
-                <div style={{ fontWeight: 900 }}>Upper</div>
+                <div style={{ fontWeight: 600 }}>Upper</div>
                 <div style={styles.muted}>6 exercises</div>
-              </div>
-
-              <div style={styles.workoutCard}>
-                <div style={{ fontWeight: 900 }}>Lower</div>
-                <div style={styles.muted}>5 exercises</div>
               </div>
             </div>
           ))}
-        </div>
-      </Card>
-
-      <Card title="Workout Editor">
-        <div style={styles.editor}>
-          <div>
-            <div style={styles.label}>Workout Name</div>
-            <input style={styles.input} placeholder="e.g., Upper Body" />
-          </div>
-
-          <div>
-            <div style={styles.label}>Notes</div>
-            <input
-              style={styles.input}
-              placeholder="e.g., Chest + Back focus"
-            />
-          </div>
-
-          <div style={{ display: "flex", gap: 10 }}>
-            <Button>Save Workout</Button>
-            <Button variant="ghost">+ Add Exercise</Button>
-          </div>
         </div>
       </Card>
 
@@ -73,6 +46,7 @@ const styles = {
     gap: 10,
     overflowX: "auto",
     paddingBottom: 4,
+    minHeight: "50vh",
   },
 
   dayCol: {
@@ -81,9 +55,10 @@ const styles = {
     padding: 10,
     background: "rgba(245,247,251,0.7)",
     minWidth: 140,
+    minHeight: "50vh",
   },
 
-  dayLabel: { fontWeight: 900, marginBottom: 8 },
+  dayLabel: { fontWeight: 900, marginBottom: 12 },
 
   workoutCard: {
     border: "1px solid var(--border)",
@@ -91,27 +66,8 @@ const styles = {
     padding: 10,
     background: "var(--card)",
     marginBottom: 8,
+    minHeight: "15vh",
   },
 
   muted: { color: "var(--muted)", fontSize: 13, marginTop: 4 },
-
-  editor: { display: "grid", gap: 12, maxWidth: 520 },
-
-  label: {
-    fontSize: 12,
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-    fontWeight: 900,
-    color: "var(--muted)",
-    marginBottom: 6,
-  },
-
-  input: {
-    width: "100%",
-    padding: 10,
-    borderRadius: 12,
-    border: "1px solid var(--border)",
-    background: "#fff",
-    outline: "none",
-  },
 };
