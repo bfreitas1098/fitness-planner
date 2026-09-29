@@ -17,7 +17,7 @@ const styles = {
     minHeight: "100vh",
   },
   sidebar: {
-    background: "var(--card)",
+    background: "var(--primary)",
     borderRight: "1px solid var(--border)",
   },
   main: {
@@ -27,7 +27,8 @@ const styles = {
   },
   header: {
     background: "var(--card)",
-    borderBottom: "1px solid var(--border)",
+    border: "1px solid var(--border)",
+    borderRadius: "var(--radius)",
     padding: "16px 20px",
   },
   content: {

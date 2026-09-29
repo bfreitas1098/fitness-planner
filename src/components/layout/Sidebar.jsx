@@ -10,7 +10,7 @@ export default function Sidebar({ active, onChange }) {
     <div>
       <div style={styles.brand}>
         <div style={{ fontWeight: 900, fontSize: 16 }}>Training Planner</div>
-        <div style={{ fontSize: 12, color: "var(--muted)" }}>
+        <div style={{ fontSize: 12, color: "var(--bg)" }}>
           Fitness • Planning • Progress
         </div>
       </div>
@@ -53,13 +53,13 @@ const styles = {
     padding: "10px 12px",
     borderRadius: 12,
     border: "1px solid var(--border)",
-    background: "var(--card)",
+    background: "var(--primary)",
     cursor: "pointer",
     fontWeight: 700,
   },
 
   navItemActive: {
-    border: "1px solid rgba(43,89,255,0.35)",
-    background: "rgba(43,89,255,0.1)",
+    border: "1px solid var(--border)",
+    background: "rgba(233, 235, 248, 0.7)",
   },
 };

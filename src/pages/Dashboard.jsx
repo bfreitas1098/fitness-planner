@@ -15,7 +15,7 @@ export default function Dashboard() {
       <Card title="Next Up">
         <div style={{ fontWeight: 800, marginBottom: 6 }}>Upper Body</div>
         <div style={{ color: "var(--muted)" }}>
-          Monday • 6 exercies • Estimated 55 min
+          Monday • 6 exercises • Estimated 55 min
         </div>
       </Card>
 
