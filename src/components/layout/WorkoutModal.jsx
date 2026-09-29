@@ -7,7 +7,7 @@ const exerciseCategories = [
   { category: "CORE", label: "Core" },
 ];
 
-export default function WorkoutModal({ isOpen, onClose }) {
+export default function WorkoutModal({ isOpen, onClose, inline = false }) {
   const [workoutExercises, setWorkoutExercises] = useState([]);
   const [exercises, setExercises] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -15,6 +15,7 @@ export default function WorkoutModal({ isOpen, onClose }) {
   const [workoutName, setWorkoutName] = useState("");
   const [workoutDate, setWorkoutDate] = useState("");
   const [notes, setNotes] = useState("");
+  const [areExercisesExpanded, setAreExercisesExpanded] = useState(false);
 
   const exerciseGroups = [
     ...exerciseCategories.map(({ category, label }) => ({
@@ -155,7 +156,7 @@ export default function WorkoutModal({ isOpen, onClose }) {
       setNotes("");
       setWorkoutExercises([]);
 
-      onClose();
+      if (!inline) onClose?.();
     } catch (err) {
       console.error(err);
       alert("Something went wrong saving the workout");
@@ -165,9 +166,9 @@ export default function WorkoutModal({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   return (
-    <div style={styles.backdrop}>
-      <div style={styles.modalContent}>
-        <h2>Create Workout</h2>
+    <div style={inline ? styles.inlineContainer : styles.backdrop}>
+      <div style={inline ? styles.inlineContent : styles.modalContent}>
+        {!inline && <h2>Create Workout</h2>}
 
         <div style={styles.field}>
           <label style={styles.label}>Workout Name</label>
@@ -202,50 +203,69 @@ export default function WorkoutModal({ isOpen, onClose }) {
         </div>
 
         <div>
-          <div style={styles.label}>Available Exercises</div>
+          <button
+            type="button"
+            style={styles.exerciseToggle}
+            aria-expanded={areExercisesExpanded}
+            aria-controls="available-exercises-content"
+            onClick={() => setAreExercisesExpanded((expanded) => !expanded)}
+          >
+            <span>Available Exercises</span>
+            <span aria-hidden="true">{areExercisesExpanded ? "▾" : "▸"}</span>
+          </button>
 
-          {loading ? (
-            <p>Loading exercises...</p>
-          ) : error ? (
-            <p>{error}</p>
-          ) : exercises.length === 0 ? (
-            <p>No exercises found.</p>
-          ) : (
-            <div style={styles.exerciseGroups}>
-              {exerciseGroups.map((group) => (
-                <section key={group.label} style={styles.exerciseGroup}>
-                  <h3 style={styles.exerciseGroupTitle}>{group.label}</h3>
-                  <div style={styles.exerciseList}>
-                    {group.exercises.map((exercise) => {
-                      const isSelected = workoutExercises.some(
-                        (workoutExercise) =>
-                          workoutExercise.exerciseId === exercise.id,
-                      );
-                      const exerciseOrder = workoutExercises.findIndex(
-                        (workoutExercise) =>
-                          workoutExercise.exerciseId === exercise.id,
-                      );
+          {areExercisesExpanded && (
+            <div
+              id="available-exercises-content"
+              style={styles.exerciseContent}
+            >
+              {loading ? (
+                <p>Loading exercises...</p>
+              ) : error ? (
+                <p>{error}</p>
+              ) : exercises.length === 0 ? (
+                <p>No exercises found.</p>
+              ) : (
+                <div style={styles.exerciseGroups}>
+                  {exerciseGroups.map((group) => (
+                    <section key={group.label} style={styles.exerciseGroup}>
+                      <h3 style={styles.exerciseGroupTitle}>{group.label}</h3>
+                      <div style={styles.exerciseList}>
+                        {group.exercises.map((exercise) => {
+                          const isSelected = workoutExercises.some(
+                            (workoutExercise) =>
+                              workoutExercise.exerciseId === exercise.id,
+                          );
+                          const exerciseOrder = workoutExercises.findIndex(
+                            (workoutExercise) =>
+                              workoutExercise.exerciseId === exercise.id,
+                          );
 
-                      return (
-                        <button
-                          key={exercise.id}
-                          type="button"
-                          onClick={() => toggleExercise(exercise)}
-                          style={{
-                            ...styles.exerciseButton,
-                            ...(isSelected
-                              ? styles.exerciseButtonSelected
-                              : {}),
-                          }}
-                        >
-                          {isSelected ? `${exerciseOrder + 1}. ` : ""}
-                          {exercise.name}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </section>
-              ))}
+                          return (
+                            <button
+                              key={exercise.id}
+                              type="button"
+                              onClick={() => toggleExercise(exercise)}
+                              style={{
+                                ...styles.exerciseButton,
+                                ...(isSelected
+                                  ? styles.exerciseButtonSelected
+                                  : {}),
+                              }}
+                            >
+                              {isSelected ? `${exerciseOrder + 1}. ` : ""}
+                              {exercise.name}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </section>
+                  ))}
+                </div>
+              )}
+              <Button type="button" variant="ghost">
+                Create Exercise
+              </Button>
             </div>
           )}
         </div>
@@ -318,9 +338,11 @@ export default function WorkoutModal({ isOpen, onClose }) {
           <button style={styles.primaryButton} onClick={handleSaveWorkout}>
             Save Workout
           </button>
-          <button onClick={onClose} style={styles.secondaryButton}>
-            Close
-          </button>
+          {!inline && (
+            <button onClick={onClose} style={styles.secondaryButton}>
+              Close
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -328,6 +350,13 @@ export default function WorkoutModal({ isOpen, onClose }) {
 }
 
 const styles = {
+  inlineContainer: {
+    width: "100%",
+  },
+  inlineContent: {
+    display: "grid",
+    gap: 14,
+  },
   backdrop: {
     position: "fixed",
     top: 0,
@@ -361,6 +390,28 @@ const styles = {
     fontSize: 14,
     fontWeight: 700,
     marginBottom: 6,
+  },
+
+  exerciseToggle: {
+    width: "100%",
+    paddingRight: 10,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    border: "none",
+    background: "transparent",
+    color: "inherit",
+    cursor: "pointer",
+    font: "inherit",
+    fontSize: 18,
+    fontWeight: 700,
+    textAlign: "left",
+  },
+
+  exerciseContent: {
+    display: "grid",
+    gap: 14,
+    marginTop: 12,
   },
 
   input: {

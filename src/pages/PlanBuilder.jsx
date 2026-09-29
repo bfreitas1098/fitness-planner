@@ -1,22 +1,26 @@
 import { Button, Card } from "../components/layout/ui";
-import { useState } from "react";
 import WorkoutModal from "../components/layout/WorkoutModal";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-export default function PlanBuilder() {
-  const [isWorkoutModalOpen, setIsWorkoutModalOpen] = useState(false);
+function getCurrentWeekRange() {
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - startDate.getDay());
 
+  const endDate = new Date(startDate);
+  endDate.setDate(endDate.getDate() + 6);
+
+  const formatDate = (date) =>
+    date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
+  return `${formatDate(startDate)} - ${formatDate(endDate)}`;
+}
+
+export default function PlanBuilder() {
   return (
     <div style={{ maxWidth: 1100, display: "grid", gap: 14 }}>
-      <Card
-        title="Week Plan"
-        action={
-          <Button variant="ghost" onClick={() => setIsWorkoutModalOpen(true)}>
-            + Add Workout
-          </Button>
-        }
-      >
+      <Card title="Week Plan">
+        <div style={styles.weekRange}>{getCurrentWeekRange()}</div>
         <div style={styles.week}>
           {DAYS.map((day) => (
             <div key={day} style={styles.dayCol}>
@@ -26,20 +30,34 @@ export default function PlanBuilder() {
                 <div style={{ fontWeight: 600 }}>Upper</div>
                 <div style={styles.muted}>6 exercises</div>
               </div>
+
+              <Button
+                type="button"
+                variant="ghost"
+                style={{ fontSize: "14px" }}
+              >
+                + Add Workout
+              </Button>
             </div>
           ))}
         </div>
       </Card>
 
-      <WorkoutModal
-        isOpen={isWorkoutModalOpen}
-        onClose={() => setIsWorkoutModalOpen(false)}
-      />
+      <Card title="Create Workout">
+        <WorkoutModal isOpen inline />
+      </Card>
     </div>
   );
 }
 
 const styles = {
+  weekRange: {
+    color: "var(--muted)",
+    fontSize: 14,
+    marginBottom: 14,
+    marginTop: -9,
+  },
+
   week: {
     display: "grid",
     gridTemplateColumns: "repeat(7, minMax(0, 1fr))",
@@ -50,6 +68,9 @@ const styles = {
   },
 
   dayCol: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "stretch",
     border: "1px solid var(--border)",
     borderRadius: 14,
     padding: 10,
@@ -66,7 +87,7 @@ const styles = {
     padding: 10,
     background: "var(--card)",
     marginBottom: 8,
-    minHeight: "15vh",
+    maxHeight: "15vh",
   },
 
   muted: { color: "var(--muted)", fontSize: 13, marginTop: 4 },
