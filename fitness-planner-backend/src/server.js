@@ -25,20 +25,98 @@ app.get("/exercises", async (req, res) => {
 
 app.post("/exercises", async (req, res) => {
   try {
-    const { name } = req.body;
+    const { name, category } = req.body ?? {};
 
-    if (!name || typeof name !== "string") {
-      return res.status(400).json({ error: "name is required" });
+    if (typeof name !== "string" || !name.trim()) {
+      return res.status(400).json({ error: "name must be a non-empty string" });
+    }
+
+    const validCategories = ["UPPER_BODY", "LOWER_BODY", "CORE"];
+    if (!validCategories.includes(category)) {
+      return res.status(400).json({
+        error: `category must be one of: ${validCategories.join(", ")}`,
+      });
     }
 
     const exercise = await prisma.exercise.create({
-      data: { name: name.trim() },
+      data: { name: name.trim(), category, isCustom: true },
     });
 
     res.status(201).json(exercise);
   } catch (err) {
+    if (err?.code === "P2002") {
+      return res
+        .status(409)
+        .json({ error: "An exercise with this name already exists" });
+    }
+
     console.error("POST /exercises error:", err);
     res.status(500).json({ error: "Could not post exercises" });
+  }
+});
+
+app.patch("/exercises", async (req, res) => {
+  try {
+    const body = req.body ?? {};
+    const { id, name, category } = body;
+
+    if (!Number.isInteger(id) || id <= 0) {
+      return res.status(400).json({ error: "id must be a positive integer" });
+    }
+
+    const hasName = Object.hasOwn(body, "name");
+    const hasCategory = Object.hasOwn(body, "category");
+    if (!hasName && !hasCategory) {
+      return res
+        .status(400)
+        .json({ error: "At least one of name or category is required" });
+    }
+
+    if (hasName && (typeof name !== "string" || !name.trim())) {
+      return res.status(400).json({ error: "name must be a non-empty string" });
+    }
+
+    const validCategories = ["UPPER_BODY", "LOWER_BODY", "CORE"];
+    if (hasCategory && !validCategories.includes(category)) {
+      return res.status(400).json({
+        error: `category must be one of: ${validCategories.join(", ")}`,
+      });
+    }
+
+    const existingExercise = await prisma.exercise.findUnique({
+      where: { id },
+      select: { id: true, isCustom: true },
+    });
+
+    if (!existingExercise) {
+      return res.status(404).json({ error: "Exercise not found" });
+    }
+
+    if (!existingExercise.isCustom) {
+      return res
+        .status(403)
+        .json({ error: "Default exercises cannot be edited" });
+    }
+
+    const data = {};
+    if (hasName) data.name = name.trim();
+    if (hasCategory) data.category = category;
+
+    const exercise = await prisma.exercise.update({
+      where: { id },
+      data,
+    });
+
+    res.json(exercise);
+  } catch (err) {
+    if (err?.code === "P2002") {
+      return res
+        .status(409)
+        .json({ error: "An exercise with this name already exists" });
+    }
+
+    console.error("PATCH /exercises error:", err);
+    res.status(500).json({ error: "Could not update exercise" });
   }
 });
 

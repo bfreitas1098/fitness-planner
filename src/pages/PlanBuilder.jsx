@@ -46,7 +46,7 @@ const styles = {
     gap: 10,
     overflowX: "auto",
     paddingBottom: 4,
-    minHeight: "50vh",
+    maxHeight: "50vh",
   },
 
   dayCol: {
@@ -55,7 +55,7 @@ const styles = {
     padding: 10,
     background: "rgba(245,247,251,0.7)",
     minWidth: 140,
-    minHeight: "50vh",
+    maxHeight: "50vh",
   },
 
   dayLabel: { fontWeight: 900, marginBottom: 12 },
