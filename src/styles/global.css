@@ -5,7 +5,7 @@
   --text: #0f172a;
   --muted: #84827a;
   --primary: #8d818c;
-  --shadow: 0 8px 24px rgba(180, 184, 197, 0.06);
+  --shadow: 0 8px 20px rgba(180, 184, 197, 0.5);
   --radius: 16px;
 }
 
@@ -42,4 +42,18 @@ button,
 input,
 select {
   font: inherit;
+}
+
+.button-hover {
+  transition: box-shadow 120ms ease-in-out;
+}
+
+.button-hover:hover {
+  box-shadow: var(--shadow);
+}
+
+.ghost-button.button-hover:hover {
+  background: var(--primary) !important;
+  border-color: var(--primary) !important;
+  color: #fff !important;
 }

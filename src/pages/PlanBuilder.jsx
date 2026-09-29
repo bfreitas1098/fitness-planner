@@ -18,7 +18,7 @@ function getCurrentWeekRange() {
 
 export default function PlanBuilder() {
   return (
-    <div style={{ maxWidth: 1100, display: "grid", gap: 14 }}>
+    <div style={{ maxWidth: 1100, display: "grid", gap: 20 }}>
       <Card title="Week Plan">
         <div style={styles.weekRange}>{getCurrentWeekRange()}</div>
         <div style={styles.week}>
@@ -34,6 +34,7 @@ export default function PlanBuilder() {
               <Button
                 type="button"
                 variant="ghost"
+                className="button-hover ghost-button"
                 style={{ fontSize: "14px" }}
               >
                 + Add Workout

@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "./ui";
+import caretDown from "../../../caret_down.svg";
+import caretRight from "../../../caret_right.svg";
 
 const exerciseCategories = [
   { category: "UPPER_BODY", label: "Upper Body" },
@@ -211,7 +213,13 @@ export default function WorkoutModal({ isOpen, onClose, inline = false }) {
             onClick={() => setAreExercisesExpanded((expanded) => !expanded)}
           >
             <span>Available Exercises</span>
-            <span aria-hidden="true">{areExercisesExpanded ? "▾" : "▸"}</span>
+            <img
+              src={areExercisesExpanded ? caretDown : caretRight}
+              alt=""
+              aria-hidden="true"
+              width="24"
+              height="24"
+            />
           </button>
 
           {areExercisesExpanded && (
@@ -245,6 +253,7 @@ export default function WorkoutModal({ isOpen, onClose, inline = false }) {
                             <button
                               key={exercise.id}
                               type="button"
+                              className={inline ? "button-hover" : undefined}
                               onClick={() => toggleExercise(exercise)}
                               style={{
                                 ...styles.exerciseButton,
@@ -263,7 +272,11 @@ export default function WorkoutModal({ isOpen, onClose, inline = false }) {
                   ))}
                 </div>
               )}
-              <Button type="button" variant="ghost">
+              <Button
+                type="button"
+                variant="ghost"
+                className={inline ? "button-hover ghost-button" : undefined}
+              >
                 Create Exercise
               </Button>
             </div>
@@ -324,6 +337,7 @@ export default function WorkoutModal({ isOpen, onClose, inline = false }) {
                   <Button
                     type="button"
                     variant="ghost"
+                    className={inline ? "button-hover ghost-button" : undefined}
                     onClick={() => addSet(workoutExercise.exerciseId)}
                   >
                     + Add Set
@@ -394,7 +408,7 @@ const styles = {
 
   exerciseToggle: {
     width: "100%",
-    paddingRight: 10,
+    padding: 0,
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",

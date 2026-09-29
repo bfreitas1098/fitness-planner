@@ -41,7 +41,7 @@ function Kpi({ label, value }) {
 }
 
 const styles = {
-  grid: { display: "grid", gap: 14, maxWidth: 1000 },
+  grid: { display: "grid", gap: 20, maxWidth: 1000 },
 
   kpis: {
     display: "grid",
