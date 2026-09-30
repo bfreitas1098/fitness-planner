@@ -9,7 +9,12 @@ const exerciseCategories = [
   { category: "CORE", label: "Core" },
 ];
 
-export default function WorkoutModal({ isOpen, onClose, inline = false }) {
+export default function WorkoutModal({
+  isOpen,
+  onClose,
+  onWorkoutSaved,
+  inline = false,
+}) {
   const [workoutExercises, setWorkoutExercises] = useState([]);
   const [exercises, setExercises] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -114,18 +119,18 @@ export default function WorkoutModal({ isOpen, onClose, inline = false }) {
   }
 
   async function handleSaveWorkout() {
-    if (!workoutName || !workoutDate) {
+    if (!workoutName.trim() || !workoutDate) {
       alert("Workout name and date are required");
       return;
     }
 
-    if (!workoutExercises.length === 0) {
-      alert("Please add at least one exercise");
+    if (workoutExercises.length === 0) {
+      alert("You have not selected any exercises. You can still save this workout.");
       return;
     }
 
     const payload = {
-      name: workoutName,
+      name: workoutName.trim(),
       date: workoutDate,
       exercises: workoutExercises.map((exercise) => ({
         exerciseId: exercise.exerciseId,
@@ -151,6 +156,7 @@ export default function WorkoutModal({ isOpen, onClose, inline = false }) {
 
       const data = await response.json();
       console.log("Workout saved:", data);
+      onWorkoutSaved?.(data);
 
       // Reset form
       setWorkoutName("");
@@ -177,6 +183,7 @@ export default function WorkoutModal({ isOpen, onClose, inline = false }) {
           <input
             type="text"
             placeholder="e.g. Lower Body A"
+            required
             value={workoutName}
             style={styles.input}
             onChange={(e) => setWorkoutName(e.target.value)}
@@ -187,6 +194,7 @@ export default function WorkoutModal({ isOpen, onClose, inline = false }) {
           <label style={styles.label}>Workout Date</label>
           <input
             type="date"
+            required
             value={workoutDate}
             style={styles.input}
             onChange={(e) => setWorkoutDate(e.target.value)}

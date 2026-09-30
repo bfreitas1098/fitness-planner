@@ -152,6 +152,11 @@ app.get("/workouts", async (req, res) => {
       orderBy: {
         date: "desc",
       },
+      include: {
+        _count: {
+          select: { workoutExercises: true },
+        },
+      },
     });
 
     res.json(workouts);
@@ -269,7 +274,7 @@ app.post("/workouts/full", async (req, res) => {
     const { name, date, exercises } = req.body;
 
     // Validation
-    if (!name || typeof name !== "string") {
+    if (typeof name !== "string" || !name.trim()) {
       return res.status(400).json({ error: "valid name is required" });
     }
 
@@ -278,10 +283,8 @@ app.post("/workouts/full", async (req, res) => {
       return res.status(400).json({ error: "valid date is required" });
     }
 
-    if (!exercises || !Array.isArray(exercises) || exercises.length === 0) {
-      return res
-        .status(400)
-        .json({ error: "at least one exercise is required" });
+    if (!Array.isArray(exercises)) {
+      return res.status(400).json({ error: "exercises must be an array" });
     }
 
     // Create workout
