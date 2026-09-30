@@ -334,10 +334,19 @@ app.post("/workouts/full", async (req, res) => {
         const reps = set.reps;
         const weight = set.weight;
 
-        if (!reps || typeof reps !== "number") {
-          return res.status(400).json({ error: "reps are required for sets" });
+        if (
+          typeof reps !== "number" ||
+          !Number.isInteger(reps) ||
+          reps < 0
+        ) {
+          return res
+            .status(400)
+            .json({ error: "valid reps are required for sets" });
         }
-        if (weight !== undefined && typeof weight !== "number") {
+        if (
+          weight !== undefined &&
+          (typeof weight !== "number" || !Number.isFinite(weight) || weight < 0)
+        ) {
           return res
             .status(400)
             .json({ error: "weight must be a number if provided" });
@@ -400,32 +409,24 @@ app.delete("/workouts/:id", async (req, res) => {
       return res.status(404).json({ error: "workout not found" });
     }
 
-    const workoutExercises = await prisma.workoutExercise.findMany({
-      where: { workoutId: workoutId },
-    });
+    await prisma.$transaction(async (transaction) => {
+      const workoutExercises = await transaction.workoutExercise.findMany({
+        where: { workoutId },
+        select: { id: true },
+      });
+      const workoutExerciseIds = workoutExercises.map(
+        (workoutExercise) => workoutExercise.id,
+      );
 
-    // create an array with all workoutExerciseIds
-    const workoutExerciseIds = workoutExercises.map(
-      (workoutExercise) => workoutExercise.id,
-    );
-
-    // delete sets
-    await prisma.set.deleteMany({
-      where: {
-        workoutExerciseId: {
-          in: workoutExerciseIds,
-        },
-      },
-    });
-
-    // delete all workoutExercise rows for this workout
-    await prisma.workoutExercise.deleteMany({
-      where: { id: workoutId },
-    });
-
-    // delete the workout itself
-    await prisma.workout.delete({
-      where: { id: workoutId },
+      await transaction.set.deleteMany({
+        where: { workoutExerciseId: { in: workoutExerciseIds } },
+      });
+      await transaction.workoutExercise.deleteMany({
+        where: { workoutId },
+      });
+      await transaction.workout.delete({
+        where: { id: workoutId },
+      });
     });
 
     return res.status(200).json({ message: "workout deleted" });

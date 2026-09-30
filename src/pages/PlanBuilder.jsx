@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { Button, Card } from "../components/layout/ui";
 import WorkoutModal from "../components/layout/WorkoutModal";
-import closeButton from "../../close-btn.svg";
+import closeButton from "../assets/close-btn.svg";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const LONG_PRESS_DELAY = 500;
 
 function getCurrentWeekDates() {
   const startDate = new Date();
@@ -37,7 +38,12 @@ export default function PlanBuilder() {
   const [selectedWorkout, setSelectedWorkout] = useState(null);
   const [isWorkoutDetailsLoading, setIsWorkoutDetailsLoading] = useState(false);
   const [workoutDetailsError, setWorkoutDetailsError] = useState("");
+  const [workoutMenu, setWorkoutMenu] = useState(null);
+  const [workoutsActionError, setWorkoutsActionError] = useState("");
   const workoutDetailsRequest = useRef(0);
+  const longPressTimer = useRef(null);
+  const didLongPress = useRef(false);
+  const workoutMenuRef = useRef(null);
   const weekDates = getCurrentWeekDates();
 
   useEffect(() => {
@@ -68,6 +74,19 @@ export default function PlanBuilder() {
       isActive = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (!workoutMenu) return undefined;
+
+    function dismissMenu(event) {
+      if (!workoutMenuRef.current?.contains(event.target)) {
+        setWorkoutMenu(null);
+      }
+    }
+
+    document.addEventListener("pointerdown", dismissMenu);
+    return () => document.removeEventListener("pointerdown", dismissMenu);
+  }, [workoutMenu]);
 
   function handleWorkoutSaved(savedWorkout) {
     setWorkouts((currentWorkouts) => [
@@ -113,6 +132,43 @@ export default function PlanBuilder() {
     setWorkoutDetailsError("");
   }
 
+  function cancelLongPress() {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  }
+
+  function startLongPress(workoutId) {
+    cancelLongPress();
+    didLongPress.current = false;
+    longPressTimer.current = setTimeout(() => {
+      didLongPress.current = true;
+      setWorkoutMenu({ workoutId });
+    }, LONG_PRESS_DELAY);
+  }
+
+  async function deleteWorkout(workoutId) {
+    setWorkoutsActionError("");
+    try {
+      const response = await fetch(
+        `http://localhost:3001/workouts/${workoutId}`,
+        { method: "DELETE" },
+      );
+      if (!response.ok) {
+        throw new Error("Failed to delete workout");
+      }
+
+      setWorkouts((currentWorkouts) =>
+        currentWorkouts.filter((workout) => workout.id !== workoutId),
+      );
+      setWorkoutMenu(null);
+    } catch (error) {
+      console.error("Error deleting workout:", error);
+      setWorkoutsActionError("Could not delete workout");
+    }
+  }
+
   return (
     <div style={{ maxWidth: 1100, display: "grid", gap: 20 }}>
       <Card title="Week Plan">
@@ -134,21 +190,56 @@ export default function PlanBuilder() {
                     workout._count?.workoutExercises ??
                     workout.workoutExercises?.length ??
                     0;
+                  const isMenuOpen = workoutMenu?.workoutId === workout.id;
 
                   return (
-                    <button
-                      key={workout.id}
-                      type="button"
-                      className="button-hover"
-                      style={styles.workoutCard}
-                      onClick={() => viewWorkout(workout.id)}
-                    >
-                      <div style={{ fontWeight: 600 }}>{workout.name}</div>
-                      <div style={styles.muted}>
-                        {exerciseCount}{" "}
-                        {exerciseCount === 1 ? "exercise" : "exercises"}
-                      </div>
-                    </button>
+                    <div key={workout.id} style={styles.workoutCardWrapper}>
+                      <button
+                        type="button"
+                        className="button-hover"
+                        style={styles.workoutCard}
+                        onPointerDown={() => startLongPress(workout.id)}
+                        onPointerUp={cancelLongPress}
+                        onPointerLeave={cancelLongPress}
+                        onPointerCancel={cancelLongPress}
+                        onContextMenu={(event) => {
+                          event.preventDefault();
+                          didLongPress.current = true;
+                          setWorkoutMenu({ workoutId: workout.id });
+                        }}
+                        onClick={() => {
+                          if (didLongPress.current) {
+                            didLongPress.current = false;
+                            return;
+                          }
+                          viewWorkout(workout.id);
+                        }}
+                      >
+                        <div style={{ fontWeight: 600 }}>{workout.name}</div>
+                        <div style={styles.muted}>
+                          {exerciseCount}{" "}
+                          {exerciseCount === 1 ? "exercise" : "exercises"}
+                        </div>
+                      </button>
+
+                      {isMenuOpen && (
+                        <div
+                          ref={workoutMenuRef}
+                          role="menu"
+                          aria-label={`Actions for ${workout.name}`}
+                          style={styles.workoutMenu}
+                        >
+                          <button
+                            type="button"
+                            role="menuitem"
+                            onClick={() => deleteWorkout(workout.id)}
+                            style={styles.menuButton}
+                          >
+                            Delete workout
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   );
                 })}
 
@@ -156,7 +247,7 @@ export default function PlanBuilder() {
                   type="button"
                   variant="ghost"
                   className="button-hover ghost-button"
-                  style={{ fontSize: "14px" }}
+                  style={{ fontSize: "14px", padding: "8px" }}
                 >
                   + Add Workout
                 </Button>
@@ -164,6 +255,7 @@ export default function PlanBuilder() {
             );
           })}
         </div>
+        {workoutsActionError && <p role="alert">{workoutsActionError}</p>}
       </Card>
 
       <Card title="Create Workout">
@@ -287,6 +379,36 @@ const styles = {
     cursor: "pointer",
     textAlign: "left",
     transition: "box-shadow 120ms ease-in-out",
+  },
+
+  workoutCardWrapper: {
+    position: "relative",
+  },
+
+  workoutMenu: {
+    position: "absolute",
+    zIndex: 10,
+    top: 0,
+    left: "calc(100% + 6px)",
+    minWidth: 140,
+    display: "grid",
+    gap: 4,
+    padding: 6,
+    border: "1px solid var(--border)",
+    borderRadius: 10,
+    background: "var(--bg)",
+    boxShadow: "var(--shadow)",
+  },
+
+  menuButton: {
+    padding: "8px 10px",
+    border: "none",
+    borderRadius: 6,
+    background: "transparent",
+    color: "var(--text)",
+    cursor: "pointer",
+    textAlign: "left",
+    whiteSpace: "nowrap",
   },
 
   modalBackdrop: {

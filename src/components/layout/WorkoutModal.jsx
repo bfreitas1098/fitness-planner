@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { Button } from "./ui";
-import caretDown from "../../../caret_down.svg";
-import caretRight from "../../../caret_right.svg";
+import caretDown from "../../assets/caret_down.svg";
+import caretRight from "../../assets/caret_right.svg";
+import trashButton from "../../assets/trash-btn.svg";
 
 const exerciseCategories = [
   { category: "UPPER_BODY", label: "Upper Body" },
@@ -118,6 +119,21 @@ export default function WorkoutModal({
     setWorkoutExercises(updatedWorkoutExercises);
   }
 
+  function removeSet(exerciseId, setIndex) {
+    const updatedWorkoutExercises = workoutExercises.map((workoutExercise) => {
+      if (workoutExercise.exerciseId !== exerciseId || setIndex === 0) {
+        return workoutExercise;
+      }
+
+      return {
+        ...workoutExercise,
+        sets: workoutExercise.sets.filter((_, index) => index !== setIndex),
+      };
+    });
+
+    setWorkoutExercises(updatedWorkoutExercises);
+  }
+
   async function handleSaveWorkout() {
     if (!workoutName.trim() || !workoutDate) {
       alert("Workout name and date are required");
@@ -125,7 +141,32 @@ export default function WorkoutModal({
     }
 
     if (workoutExercises.length === 0) {
-      alert("You have not selected any exercises. You can still save this workout.");
+      alert(
+        "You have not selected any exercises. You can still save this workout.",
+      );
+      return;
+    }
+
+    const incompleteSet = workoutExercises
+      .flatMap((exercise) =>
+        exercise.sets.map((set, index) => ({
+          exerciseName: exercise.name,
+          setNumber: index + 1,
+          reps: Number(set.reps),
+          repsInput: set.reps,
+        })),
+      )
+      .find(
+        (set) =>
+          set.repsInput.trim() === "" ||
+          !Number.isInteger(set.reps) ||
+          set.reps < 0,
+      );
+
+    if (incompleteSet) {
+      alert(
+        `Enter a valid rep amount for set ${incompleteSet.setNumber} of ${incompleteSet.exerciseName}.`,
+      );
       return;
     }
 
@@ -339,6 +380,18 @@ export default function WorkoutModal({
                         }}
                         style={styles.smallInput}
                       />
+                      {index > 0 && (
+                        <button
+                          type="button"
+                          aria-label={`Remove set ${index + 1} from ${workoutExercise.name}`}
+                          onClick={() =>
+                            removeSet(workoutExercise.exerciseId, index)
+                          }
+                          style={styles.removeSetButton}
+                        >
+                          <img src={trashButton} alt="" aria-hidden="true" />
+                        </button>
+                      )}
                     </div>
                   ))}
 
@@ -526,7 +579,20 @@ const styles = {
 
   setRow: {
     display: "flex",
+    alignItems: "center",
     gap: 8,
+  },
+
+  removeSetButton: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 4,
+    border: "none",
+    borderRadius: 6,
+    background: "transparent",
+    cursor: "pointer",
+    transform: "translateX(-4px)",
   },
 
   smallInput: {
