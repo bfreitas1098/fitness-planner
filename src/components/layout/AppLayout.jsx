@@ -32,7 +32,7 @@ const styles = {
     padding: "16px 20px",
   },
   content: {
-    padding: 20,
+    padding: "20px 8px",
     minWidth: 0,
   },
 };

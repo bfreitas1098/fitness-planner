@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button, Card } from "../components/layout/ui";
 import WorkoutModal from "../components/layout/WorkoutModal";
+import closeButton from "../../close-btn.svg";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -33,6 +34,10 @@ function getCurrentWeekRange(weekDates) {
 export default function PlanBuilder() {
   const [workouts, setWorkouts] = useState([]);
   const [workoutsError, setWorkoutsError] = useState("");
+  const [selectedWorkout, setSelectedWorkout] = useState(null);
+  const [isWorkoutDetailsLoading, setIsWorkoutDetailsLoading] = useState(false);
+  const [workoutDetailsError, setWorkoutDetailsError] = useState("");
+  const workoutDetailsRequest = useRef(0);
   const weekDates = getCurrentWeekDates();
 
   useEffect(() => {
@@ -71,6 +76,43 @@ export default function PlanBuilder() {
     ]);
   }
 
+  async function viewWorkout(workoutId) {
+    const requestId = ++workoutDetailsRequest.current;
+    setSelectedWorkout(null);
+    setWorkoutDetailsError("");
+    setIsWorkoutDetailsLoading(true);
+
+    try {
+      const response = await fetch(
+        `http://localhost:3001/workouts/${workoutId}`,
+      );
+      if (!response.ok) {
+        throw new Error("Failed to fetch workout details");
+      }
+
+      const workout = await response.json();
+      if (requestId === workoutDetailsRequest.current) {
+        setSelectedWorkout(workout);
+      }
+    } catch (error) {
+      console.error("Error fetching workout details:", error);
+      if (requestId === workoutDetailsRequest.current) {
+        setWorkoutDetailsError("Could not load workout details");
+      }
+    } finally {
+      if (requestId === workoutDetailsRequest.current) {
+        setIsWorkoutDetailsLoading(false);
+      }
+    }
+  }
+
+  function closeWorkoutDetails() {
+    workoutDetailsRequest.current += 1;
+    setSelectedWorkout(null);
+    setIsWorkoutDetailsLoading(false);
+    setWorkoutDetailsError("");
+  }
+
   return (
     <div style={{ maxWidth: 1100, display: "grid", gap: 20 }}>
       <Card title="Week Plan">
@@ -94,13 +136,19 @@ export default function PlanBuilder() {
                     0;
 
                   return (
-                    <div key={workout.id} style={styles.workoutCard}>
+                    <button
+                      key={workout.id}
+                      type="button"
+                      className="button-hover"
+                      style={styles.workoutCard}
+                      onClick={() => viewWorkout(workout.id)}
+                    >
                       <div style={{ fontWeight: 600 }}>{workout.name}</div>
                       <div style={styles.muted}>
                         {exerciseCount}{" "}
                         {exerciseCount === 1 ? "exercise" : "exercises"}
                       </div>
-                    </div>
+                    </button>
                   );
                 })}
 
@@ -121,6 +169,77 @@ export default function PlanBuilder() {
       <Card title="Create Workout">
         <WorkoutModal isOpen inline onWorkoutSaved={handleWorkoutSaved} />
       </Card>
+
+      {(selectedWorkout || isWorkoutDetailsLoading || workoutDetailsError) && (
+        <div
+          style={styles.modalBackdrop}
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) closeWorkoutDetails();
+          }}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="workout-details-title"
+            style={styles.detailsModal}
+          >
+            <div style={styles.detailsHeader}>
+              <h2 id="workout-details-title" style={styles.detailsTitle}>
+                {selectedWorkout?.name ?? "Workout"}
+              </h2>
+              <button
+                type="button"
+                aria-label="Close workout details"
+                onClick={closeWorkoutDetails}
+                style={styles.closeButton}
+              >
+                <img src={closeButton} alt="" aria-hidden="true" />
+              </button>
+            </div>
+
+            {isWorkoutDetailsLoading ? (
+              <p>Loading workout...</p>
+            ) : workoutDetailsError ? (
+              <p role="alert">{workoutDetailsError}</p>
+            ) : (
+              <>
+                <h3 style={styles.exercisesTitle}>Exercises</h3>
+                {selectedWorkout.workoutExercises.length === 0 ? (
+                  <p>No exercises added.</p>
+                ) : (
+                  <div style={styles.detailsExercises}>
+                    {selectedWorkout.workoutExercises.map((workoutExercise) => (
+                      <section
+                        key={workoutExercise.id}
+                        style={styles.detailsExercise}
+                      >
+                        <h4 style={styles.exerciseName}>
+                          {workoutExercise.exercise.name}
+                        </h4>
+                        <ol style={styles.setList}>
+                          {[...workoutExercise.sets]
+                            .sort((a, b) => a.setNumber - b.setNumber)
+                            .map((set) => (
+                              <li key={set.id} style={styles.setItem}>
+                                <span>Set {set.setNumber}</span>
+                                <span>{set.reps} reps</span>
+                                <span>
+                                  {set.weight == null
+                                    ? "Weight not recorded"
+                                    : `${set.weight} lb`}
+                                </span>
+                              </li>
+                            ))}
+                        </ol>
+                      </section>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </section>
+        </div>
+      )}
     </div>
   );
 }
@@ -157,12 +276,95 @@ const styles = {
   dayLabel: { fontWeight: 900, marginBottom: 12 },
 
   workoutCard: {
+    width: "100%",
     border: "1px solid var(--border)",
     borderRadius: 12,
     padding: 10,
     background: "var(--card)",
     marginBottom: 8,
     maxHeight: "15vh",
+    color: "var(--text)",
+    cursor: "pointer",
+    textAlign: "left",
+    transition: "box-shadow 120ms ease-in-out",
+  },
+
+  modalBackdrop: {
+    position: "fixed",
+    inset: 0,
+    zIndex: 1100,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 20,
+    backgroundColor: "rgba(15, 23, 42, 0.5)",
+  },
+
+  detailsModal: {
+    width: "min(600px, 100%)",
+    maxHeight: "85vh",
+    overflowY: "auto",
+    padding: 24,
+    border: "1px solid var(--border)",
+    borderRadius: 16,
+    background: "var(--card)",
+    boxShadow: "var(--shadow)",
+  },
+
+  detailsHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 16,
+    marginBottom: 20,
+  },
+
+  detailsTitle: {
+    margin: 0,
+    fontSize: 22,
+  },
+
+  closeButton: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 4,
+    border: "none",
+    background: "transparent",
+    cursor: "pointer",
+  },
+
+  exercisesTitle: {
+    margin: "0 0 12px",
+    fontSize: 18,
+  },
+
+  detailsExercises: {
+    display: "grid",
+    gap: 12,
+  },
+
+  detailsExercise: {
+    padding: 12,
+    border: "1px solid var(--border)",
+    borderRadius: 12,
+    background: "var(--bg)",
+  },
+
+  exerciseName: {
+    margin: "0 0 8px",
+  },
+
+  setList: {
+    margin: 0,
+    paddingLeft: 24,
+  },
+
+  setItem: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr 1fr",
+    gap: 8,
+    padding: "4px 0",
   },
 
   muted: { color: "var(--muted)", fontSize: 13, marginTop: 4 },
