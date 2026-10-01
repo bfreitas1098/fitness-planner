@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "./ui";
+import ExerciseModal from "./ExerciseModal";
 import caretDown from "../../assets/caret_down.svg";
 import caretRight from "../../assets/caret_right.svg";
 import trashButton from "../../assets/trash-btn.svg";
@@ -24,6 +25,7 @@ export default function WorkoutModal({
   const [workoutDate, setWorkoutDate] = useState("");
   const [notes, setNotes] = useState("");
   const [areExercisesExpanded, setAreExercisesExpanded] = useState(false);
+  const [isExerciseModalOpen, setIsExerciseModalOpen] = useState(false);
 
   const exerciseGroups = [
     ...exerciseCategories.map(({ category, label }) => ({
@@ -325,6 +327,7 @@ export default function WorkoutModal({
                 type="button"
                 variant="ghost"
                 className={inline ? "button-hover ghost-button" : undefined}
+                onClick={() => setIsExerciseModalOpen(true)}
               >
                 Create Exercise
               </Button>
@@ -420,6 +423,19 @@ export default function WorkoutModal({
           )}
         </div>
       </div>
+
+      <ExerciseModal
+        isOpen={isExerciseModalOpen}
+        onClose={() => setIsExerciseModalOpen(false)}
+        onExerciseSaved={(exercise) => {
+          setExercises((currentExercises) => [
+            ...currentExercises.filter(
+              (currentExercise) => currentExercise.id !== exercise.id,
+            ),
+            exercise,
+          ]);
+        }}
+      />
     </div>
   );
 }
