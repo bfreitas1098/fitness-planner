@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Button, Card } from "../components/layout/ui";
 import WorkoutModal from "../components/layout/WorkoutModal";
+import AddWorkoutModal from "../components/layout/AddWorkoutModal";
 import closeButton from "../assets/close-btn.svg";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -40,6 +41,7 @@ export default function PlanBuilder() {
   const [workoutDetailsError, setWorkoutDetailsError] = useState("");
   const [workoutMenu, setWorkoutMenu] = useState(null);
   const [workoutsActionError, setWorkoutsActionError] = useState("");
+  const [isAddWorkoutModalOpen, setIsAddWorkoutModalOpen] = useState(false);
   const workoutDetailsRequest = useRef(0);
   const longPressTimer = useRef(null);
   const didLongPress = useRef(false);
@@ -248,6 +250,7 @@ export default function PlanBuilder() {
                   variant="ghost"
                   className="button-hover ghost-button"
                   style={{ fontSize: "14px", padding: "8px" }}
+                  onClick={() => setIsAddWorkoutModalOpen(true)}
                 >
                   + Add Workout
                 </Button>
@@ -261,6 +264,11 @@ export default function PlanBuilder() {
       <Card title="Create Workout">
         <WorkoutModal isOpen inline onWorkoutSaved={handleWorkoutSaved} />
       </Card>
+
+      <AddWorkoutModal
+        isOpen={isAddWorkoutModalOpen}
+        onClose={() => setIsAddWorkoutModalOpen(false)}
+      />
 
       {(selectedWorkout || isWorkoutDetailsLoading || workoutDetailsError) && (
         <div
